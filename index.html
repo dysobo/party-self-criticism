@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自我批评参考素材一键生成</title>
+    <script src="https://unpkg.com/docx@7.8.2/build/index.js"></script>
+    <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: "Microsoft YaHei", sans-serif; background: #f5f5f5; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #c8232c; margin-bottom: 30px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: bold; color: #333; }
+        input, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; }
+        textarea { min-height: 100px; resize: vertical; font-family: inherit; }
+        .hint { font-size: 12px; color: #999; margin-top: 5px; }
+        .btn-group { display: flex; gap: 10px; margin-top: 30px; }
+        button { flex: 1; padding: 12px; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; transition: all 0.3s; }
+        .btn-primary { background: #c8232c; color: white; }
+        .btn-primary:hover { background: #a01d24; }
+        .btn-secondary { background: #666; color: white; }
+        .btn-secondary:hover { background: #555; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #218838; }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+        .result-section { margin-top: 30px; display: none; }
+        .result-content { background: #f9f9f9; padding: 20px; border-radius: 4px; border: 1px solid #ddd; white-space: pre-wrap; line-height: 1.8; }
+        .edit-area { width: 100%; min-height: 300px; padding: 15px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; line-height: 1.8; }
+        .loading { text-align: center; color: #c8232c; margin: 20px 0; }
+        .version { position: absolute; top: 20px; right: 40px; cursor: pointer; color: #666; font-size: 14px; }
+        .version:hover { color: #c8232c; }
+        .api-config { position: absolute; top: 20px; left: 40px; cursor: pointer; color: #666; font-size: 14px; }
+        .api-config:hover { color: #c8232c; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; }
+        .modal-content { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 8px; max-width: 500px; width: 90%; }
+        .modal-close { float: right; font-size: 24px; cursor: pointer; color: #999; }
+        .modal-close:hover { color: #333; }
+        .notice { color: #c8232c; font-weight: bold; margin: 15px 0; line-height: 1.8; }
+        .notice-btn { width: 100%; padding: 12px; background: #c8232c; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 15px; }
+        .notice-btn:hover { background: #a01d24; }
+        .version-item { margin: 15px 0; padding: 10px; background: #f9f9f9; border-radius: 4px; }
+        .version-title { font-weight: bold; color: #c8232c; margin-bottom: 5px; }
+        .api-form { margin: 20px 0; }
+        .api-form input, .api-form select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; }
+        .api-form button { width: 100%; padding: 10px; background: #c8232c; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .api-form button:hover { background: #a01d24; }
+        .tutorial { background: #f0f0f0; padding: 15px; border-radius: 4px; margin-top: 15px; font-size: 13px; line-height: 1.6; }
+    </style>
+</head>
+<body>
+    <div class="api-config" onclick="showApiConfig()">⚙️ API配置</div>
+    <div class="version" onclick="showVersion()">V1.6</div>
+
+    <div class="modal" id="noticeModal">
+        <div class="modal-content">
+            <h2>重要提示</h2>
+            <div class="notice">
+                免费 Key 已被薅秃，生成结果一直是空白就是没额度了！<br><br>
+                解决方法：点左上角"⚙️ API配置"，切换 DeepSeek，填入自己的 API Key。<br><br>
+                充值 1 块钱能用 100 次！<br><br>
+                <div style="text-align: right; font-size: 14px; color: #666;">—— 一个没钱了的雷锋波</div>
+            </div>
+            <button class="notice-btn" onclick="closeNotice()">我知道了</button>
+        </div>
+    </div>
+
+    <div class="modal" id="apiModal" onclick="closeApiConfig()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="modal-close" onclick="closeApiConfig()">&times;</span>
+            <h2>API 配置</h2>
+            <div class="api-form">
+                <label>选择模型提供商</label>
+                <select id="apiProvider" onchange="updateApiConfig()">
+                    <option value="aihubmix">AiHubMix (默认)</option>
+                    <option value="deepseek">DeepSeek</option>
+                    <option value="custom">自定义</option>
+                </select>
+                <label>API Key</label>
+                <input type="text" id="apiKey" placeholder="留空使用内置 Key">
+                <label>API 地址</label>
+                <input type="text" id="apiUrl" placeholder="API 地址">
+                <label>模型名称</label>
+                <input type="text" id="modelName" placeholder="模型名称">
+                <button onclick="saveApiConfig()">保存配置</button>
+            </div>
+            <div class="tutorial">
+                <strong>DeepSeek 配置教程：</strong><br>
+                1. 访问 https://platform.deepseek.com 注册账号<br>
+                2. 获取 API Key<br>
+                3. API 地址：https://api.deepseek.com/chat/completions<br>
+                4. 模型名称：deepseek-chat
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="versionModal" onclick="closeVersion()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <span class="modal-close" onclick="closeVersion()">&times;</span>
+            <h2>版本说明</h2>
+            <div class="version-item">
+                <div class="version-title">V1.6（当前版本）</div>
+                <div>- 支持用户自定义 API Key<br>- 内置 DeepSeek 等多个模型选项<br>- 配置本地保存，无需重复填写<br>- 免费 Key 已被薅秃，建议配置自己的 DeepSeek API（一次生成约1分钱）</div>
+            </div>
+            <div class="version-item">
+                <div class="version-title">V1.5</div>
+                <div>- 删除"检验/计量的主要产品"字段<br>- 适用于所有岗位，不再局限特定行业</div>
+            </div>
+            <div class="version-item">
+                <div class="version-title">V1.4</div>
+                <div>- 严格基于用户填写的工作内容生成，禁止编造<br>- 所有事例从实际工作中提炼<br>- 改进措施与岗位直接相关</div>
+            </div>
+            <div class="version-item">
+                <div class="version-title">V1.3</div>
+                <div>- 强化实际工作结合，要求具体事例和数据支撑<br>- 避免假大空套话，语言更朴实真诚<br>- 改进措施更具体可行</div>
+            </div>
+            <div class="version-item">
+                <div class="version-title">V1.2</div>
+                <div>- 新增个人信息导入导出功能<br>- 内置组织生活会5个方面要求</div>
+            </div>
+            <div class="version-item">
+                <div class="version-title">V1.1</div>
+                <div>- 细化生成要求，符合组织生活会标准<br>- 优化提示词质量</div>
+            </div>
+            <div class="version-item">
+                <div class="version-title">V1.0</div>
+                <div>- 基础信息填写功能<br>- AI 自动生成自我批评<br>- 流式输出<br>- 导出 Word 文档<br>- 上传去年文稿参考</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>自我批评参考素材一键生成</h1>
+
+        <div class="form-section">
+            <div class="form-group">
+                <label>姓名</label>
+                <input type="text" id="name" placeholder="请输入姓名">
+            </div>
+
+            <div class="form-group">
+                <label>岗位</label>
+                <input type="text" id="position" placeholder="请输入岗位">
+            </div>
+
+            <div class="form-group">
+                <label>主要工作内容</label>
+                <textarea id="work" placeholder="请详细描述主要工作内容，越详细生成效果越好"></textarea>
+                <div class="hint">提示：越详细越好</div>
+            </div>
+
+            <div class="form-group">
+                <label>有哪些自己想说的（可选）</label>
+                <textarea id="custom" placeholder="这些内容将作为重点体现，不填写则系统默认生成"></textarea>
+                <div class="hint">这些将会是重点，不写就系统默认生成</div>
+            </div>
+
+            <div class="form-group">
+                <label>上传去年的自我批评（可选）</label>
+                <input type="file" id="lastYear" accept=".txt,.doc,.docx" onchange="handleFileUpload(event)">
+                <div class="hint">可作为工作内容参考，今年将生成不同的内容</div>
+                <textarea id="lastYearContent" style="display:none;"></textarea>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn-primary" onclick="generate()">一键生成</button>
+                <button class="btn-secondary" onclick="exportInfo()">导出个人信息</button>
+                <button class="btn-secondary" onclick="document.getElementById('importFile').click()">导入个人信息</button>
+                <input type="file" id="importFile" accept=".json" style="display:none" onchange="importInfo(event)">
+            </div>
+        </div>
+
+        <div class="loading" id="loading" style="display:none;">正在生成中，请稍候...</div>
+
+        <div class="result-section" id="resultSection">
+            <h2 style="margin-bottom: 15px;">生成结果</h2>
+            <textarea class="edit-area" id="resultText"></textarea>
+            <div class="btn-group">
+                <button class="btn-success" onclick="exportWord()">导出Word文档</button>
+                <button class="btn-secondary" onclick="regenerate()">重新生成</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DEFAULT_API_KEY = 'sk-3qejSsOvN3wbmVKR6a81C2056bEc498e8373CfC8C922Bf04';
+        let API_KEY = localStorage.getItem('apiKey') || DEFAULT_API_KEY;
+        let API_URL = localStorage.getItem('apiUrl') || 'https://aihubmix.com/v1/chat/completions';
+        let MODEL_NAME = localStorage.getItem('modelName') || 'glm-4.7-flash-free';
+
+        function updateApiConfig() {
+            const provider = document.getElementById('apiProvider').value;
+            if (provider === 'aihubmix') {
+                document.getElementById('apiUrl').value = 'https://aihubmix.com/v1/chat/completions';
+                document.getElementById('modelName').value = 'glm-4.7-flash-free';
+            } else if (provider === 'deepseek') {
+                document.getElementById('apiUrl').value = 'https://api.deepseek.com/chat/completions';
+                document.getElementById('modelName').value = 'deepseek-chat';
+            }
+        }
+
+        function showApiConfig() {
+            document.getElementById('apiKey').value = API_KEY === DEFAULT_API_KEY ? '' : API_KEY;
+            document.getElementById('apiUrl').value = API_URL;
+            document.getElementById('modelName').value = MODEL_NAME;
+            document.getElementById('apiModal').style.display = 'block';
+        }
+
+        function closeApiConfig() {
+            document.getElementById('apiModal').style.display = 'none';
+        }
+
+        function saveApiConfig() {
+            const inputKey = document.getElementById('apiKey').value.trim();
+            API_KEY = inputKey || DEFAULT_API_KEY;
+            API_URL = document.getElementById('apiUrl').value.trim();
+            MODEL_NAME = document.getElementById('modelName').value.trim();
+            if (inputKey) {
+                localStorage.setItem('apiKey', API_KEY);
+            } else {
+                localStorage.removeItem('apiKey');
+            }
+            localStorage.setItem('apiUrl', API_URL);
+            localStorage.setItem('modelName', MODEL_NAME);
+            alert('配置已保存');
+            closeApiConfig();
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('lastYearContent').value = e.target.result;
+            };
+            reader.readAsText(file);
+        }
+
+        async function generate() {
+            const name = document.getElementById('name').value.trim();
+            const position = document.getElementById('position').value.trim();
+            const work = document.getElementById('work').value.trim();
+            const custom = document.getElementById('custom').value.trim();
+            const lastYearContent = document.getElementById('lastYearContent').value.trim();
+
+            if (!name || !position || !work) {
+                alert('请填写姓名、岗位和主要工作内容');
+                return;
+            }
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('resultSection').style.display = 'none';
+
+            const prompt = `请根据以下信息生成一份党员自我批评材料：
+
+姓名：${name}
+岗位：${position}
+主要工作内容：${work}
+${custom ? '重点内容：' + custom : ''}
+${lastYearContent ? '\n去年的自我批评（仅作工作内容参考）：\n' + lastYearContent : ''}
+
+【重要】生成规则：
+1. 严格基于上述"主要工作内容"展开，所有事例必须从中提炼，不得编造虚假内容
+2. 格式规范，符合党员自我批评的标准格式
+3. 必须从以下5个方面查找差距不足，每个方面都要紧扣实际工作：
+   - 学习贯彻党的创新理论：结合岗位工作，说明理论如何指导实践
+   - 加强党性锤炼：从工作态度、责任心等方面结合具体工作场景
+   - 联系服务群众：基于岗位职责，说明服务对象和服务方式
+   - 发挥先锋模范作用：从工作完成情况、工作质量等方面举例
+   - 改作风树新风：从工作方法、工作效率等方面分析
+4. 所有问题和不足必须真实可信，基于工作内容合理推断
+5. 改进措施要具体，与岗位工作直接相关
+6. 语言朴实，避免空洞表态
+7. 字数在800-1200字左右
+8. 结尾署名为"${name}"，日期为"2026年3月"
+${custom ? '9. 重点突出以下内容：' + custom : ''}
+
+请直接输出自我批评内容，不要有其他说明文字。`;
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${API_KEY}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        model: MODEL_NAME,
+                        messages: [
+                            { role: 'system', content: '你是一个专业的党员自我批评材料撰写助手。' },
+                            { role: 'user', content: prompt }
+                        ],
+                        stream: true
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error?.message || '请求失败');
+                }
+
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('resultSection').style.display = 'block';
+                document.getElementById('resultText').value = '';
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let content = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n').filter(line => line.trim().startsWith('data:'));
+
+                    for (const line of lines) {
+                        const data = line.replace('data: ', '').trim();
+                        if (data === '[DONE]') break;
+
+                        try {
+                            const json = JSON.parse(data);
+                            const delta = json.choices[0]?.delta?.content;
+                            if (delta) {
+                                content += delta;
+                                document.getElementById('resultText').value = content;
+                            }
+                        } catch (e) {}
+                    }
+                }
+            } catch (error) {
+                document.getElementById('loading').style.display = 'none';
+                let errorMsg = '生成失败：' + error.message + '\n\n';
+                if (error.message.includes('limit') || error.message.includes('quota')) {
+                    errorMsg += '兄弟们薅的有点凶，遭不住了。自己搞个 key 吧，DeepSeek 一百万字才 2 块钱。\n申请地址：https://platform.deepseek.com/api_keys\n\n';
+                }
+                errorMsg += '请检查 API 配置是否正确，或额度是否充足。点击左上角"⚙️ API配置"进行设置。';
+                alert(errorMsg);
+            }
+        }
+
+        function regenerate() {
+            if (confirm('确定要重新生成吗？当前内容将被覆盖。')) {
+                generate();
+            }
+        }
+
+        function exportInfo() {
+            const info = {
+                name: document.getElementById('name').value,
+                position: document.getElementById('position').value,
+                work: document.getElementById('work').value,
+                custom: document.getElementById('custom').value
+            };
+            const blob = new Blob([JSON.stringify(info, null, 2)], { type: 'application/json' });
+            saveAs(blob, `个人信息_${info.name || '未命名'}.json`);
+        }
+
+        function importInfo(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const info = JSON.parse(e.target.result);
+                    document.getElementById('name').value = info.name || '';
+                    document.getElementById('position').value = info.position || '';
+                    document.getElementById('work').value = info.work || '';
+                    document.getElementById('custom').value = info.custom || '';
+                    alert('导入成功');
+                } catch (err) {
+                    alert('导入失败：文件格式错误');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function exportWord() {
+            const content = document.getElementById('resultText').value;
+            if (!content) {
+                alert('没有可导出的内容');
+                return;
+            }
+
+            const name = document.getElementById('name').value.trim();
+            const paragraphs = content.split('\n').filter(p => p.trim()).map(p =>
+                new docx.Paragraph({
+                    text: p,
+                    spacing: { line: 360, before: 100, after: 100 }
+                })
+            );
+
+            const doc = new docx.Document({
+                sections: [{
+                    properties: {},
+                    children: paragraphs
+                }]
+            });
+
+            docx.Packer.toBlob(doc).then(blob => {
+                saveAs(blob, `${name || '党员'}_自我批评_${new Date().getTime()}.docx`);
+            });
+        }
+
+        function showVersion() {
+            document.getElementById('versionModal').style.display = 'block';
+        }
+
+        function closeVersion() {
+            document.getElementById('versionModal').style.display = 'none';
+        }
+
+        function closeNotice() {
+            document.getElementById('noticeModal').style.display = 'none';
+            localStorage.setItem('noticeShown', 'true');
+        }
+
+        window.onload = function() {
+            if (!localStorage.getItem('noticeShown')) {
+                document.getElementById('noticeModal').style.display = 'block';
+            }
+        };
+    </script>
+</body>
+</html>
