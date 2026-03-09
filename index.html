@@ -82,7 +82,7 @@
                     <option value="custom">自定义</option>
                 </select>
                 <label>API Key</label>
-                <input type="text" id="apiKey" placeholder="留空使用内置 Key">
+                <input type="text" id="apiKey" placeholder="请输入 API Key（必填）">
                 <label>API 地址</label>
                 <input type="text" id="apiUrl" placeholder="API 地址">
                 <label>模型名称</label>
@@ -188,8 +188,7 @@
     </div>
 
     <script>
-        const DEFAULT_API_KEY = 'sk-3qejSsOvN3wbmVKR6a81C2056bEc498e8373CfC8C922Bf04';
-        let API_KEY = localStorage.getItem('apiKey') || DEFAULT_API_KEY;
+        let API_KEY = localStorage.getItem('apiKey') || '';
         let API_URL = localStorage.getItem('apiUrl') || 'https://aihubmix.com/v1/chat/completions';
         let MODEL_NAME = localStorage.getItem('modelName') || 'glm-4.7-flash-free';
 
@@ -205,7 +204,7 @@
         }
 
         function showApiConfig() {
-            document.getElementById('apiKey').value = API_KEY === DEFAULT_API_KEY ? '' : API_KEY;
+            document.getElementById('apiKey').value = API_KEY;
             document.getElementById('apiUrl').value = API_URL;
             document.getElementById('modelName').value = MODEL_NAME;
             document.getElementById('apiModal').style.display = 'block';
@@ -216,15 +215,16 @@
         }
 
         function saveApiConfig() {
-            const inputKey = document.getElementById('apiKey').value.trim();
-            API_KEY = inputKey || DEFAULT_API_KEY;
+            API_KEY = document.getElementById('apiKey').value.trim();
             API_URL = document.getElementById('apiUrl').value.trim();
             MODEL_NAME = document.getElementById('modelName').value.trim();
-            if (inputKey) {
-                localStorage.setItem('apiKey', API_KEY);
-            } else {
-                localStorage.removeItem('apiKey');
+
+            if (!API_KEY) {
+                alert('请填写 API Key');
+                return;
             }
+
+            localStorage.setItem('apiKey', API_KEY);
             localStorage.setItem('apiUrl', API_URL);
             localStorage.setItem('modelName', MODEL_NAME);
             alert('配置已保存');
@@ -251,6 +251,11 @@
 
             if (!name || !position || !work) {
                 alert('请填写姓名、岗位和主要工作内容');
+                return;
+            }
+
+            if (!API_KEY) {
+                alert('请先配置 API Key\n\n点击左上角"⚙️ API配置"进行设置');
                 return;
             }
 
