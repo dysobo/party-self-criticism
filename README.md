@@ -4,14 +4,14 @@
 
 ## 🌐 在线访问
 
-- **自我批评**: http://x.dysobo.cn:8888/ziping.html
-- **批评他人**: http://x.dysobo.cn:8888/critique.html
+略，反正我试了，可用
 
 ## 📦 分支说明
 
 ### `master` - 静态 HTML 版本
 - 纯前端静态页面，无需后端
 - 适合简单部署，直接放到 Web 服务器即可
+- 不部署双击运行也可以
 
 ### `backend` - 后端增强版本（当前分支）
 - Node.js + Express 后端服务
@@ -100,7 +100,7 @@ PARTY_PASSWORD=your_password npm start
 
 | 变量名 | 说明 | 默认值 |
 |--------|------|--------|
-| PARTY_PASSWORD | 密码验证 | 58156104 |
+| PARTY_PASSWORD | 密码验证 | xxxxxxxx |
 | PORT | 服务端口 | 3888 |
 
 ### API 配置
