@@ -45,21 +45,20 @@ function isIPLocked(ip) {
 
 // 记录密码尝试
 function recordAttempt(ip, success) {
-    let record = ipRecords.get(ip);
-    
-    if (!record) {
-        record = { attempts: 0, lockedUntil: 0 };
-        ipRecords.set(ip, record);
-    }
-    
     if (success) {
         // 成功后清除记录
         ipRecords.delete(ip);
         return;
     }
-    
+
+    let record = ipRecords.get(ip);
+    if (!record) {
+        record = { attempts: 0, lockedUntil: 0 };
+    }
+
     record.attempts++;
-    
+    ipRecords.set(ip, record);
+
     if (record.attempts >= MAX_ATTEMPTS) {
         record.lockedUntil = Date.now() + LOCK_DURATION_MS;
         console.log(`🔒 IP ${ip} 已被锁定，锁定时间：${new Date(record.lockedUntil).toLocaleString('zh-CN')}`);
