@@ -4,7 +4,7 @@
 
 ## 🌐 在线访问
 
-- **自我批评**: http://x.dysobo.cn:8888/ziping.html（密码：58156104）
+- **自我批评**: http://x.dysobo.cn:8888/ziping.html
 - **批评他人**: http://x.dysobo.cn:8888/critique.html（需配置 API Key）
 
 ## 📦 分支说明
