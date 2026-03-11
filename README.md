@@ -4,7 +4,7 @@
 
 ## 🌐 在线访问
 
-- **自我批评**: http://x.dysobo.cn:8888/ziping.html（密码：58156104）
+- **自我批评**: http://x.dysobo.cn:8888/ziping.html（密码见部署说明）
 - **批评他人**: http://x.dysobo.cn:8888/critique.html（需配置 API Key）
 
 ## ✨ 功能特性
@@ -44,14 +44,16 @@ docker-compose down
 # 安装依赖
 npm install
 
-# 启动服务（默认密码：58156104）
+# 启动服务
 npm start
 
-# 或自定义密码
+# 自定义密码（推荐）
 PARTY_PASSWORD=your_password npm start
 ```
 
 访问：http://localhost:3888
+
+**默认密码**: 首次部署请在 Docker Compose 或环境变量中设置 `PARTY_PASSWORD`
 
 ## 📁 项目结构
 
@@ -72,7 +74,7 @@ party-self-criticism/
 
 | 变量名 | 说明 | 默认值 |
 |--------|------|--------|
-| PARTY_PASSWORD | 密码验证 | 58156104 |
+| PARTY_PASSWORD | 密码验证 | 无（必须设置） |
 
 ### API 配置
 
