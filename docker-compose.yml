@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  party-self-criticism:
+    build: .
+    ports:
+      - "3888:3888"
+    environment:
+      - PARTY_PASSWORD=58156104
+    restart: unless-stopped
+    networks:
+      - web
+
+networks:
+  web:
+    external: true
+    name: web

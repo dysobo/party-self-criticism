@@ -1,0 +1,13 @@
+{
+  "name": "party-self-criticism",
+  "version": "1.8.0",
+  "description": "自我批评参考素材一键生成 - 带 IP 锁定保护",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
