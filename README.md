@@ -7,10 +7,23 @@
 - **自我批评**: http://x.dysobo.cn:8888/ziping.html（密码：58156104）
 - **批评他人**: http://x.dysobo.cn:8888/critique.html（需配置 API Key）
 
+## 📦 分支说明
+
+### `master` - 静态 HTML 版本
+- 纯前端静态页面，无需后端
+- 密码验证在前端（查看源码可见密码）
+- 适合简单部署，直接放到 Web 服务器即可
+
+### `backend-with-ip-lock` - 后端增强版本
+- Node.js + Express 后端服务
+- 密码后端验证，前端不存储明文密码
+- 5 次错误锁定 IP 30 分钟
+- Docker 容器化部署
+
 ## ✨ 功能特性
 
 ### 自我批评页面
-- 🔐 密码验证（后端验证，5 次错误锁定 IP 30 分钟）
+- 🔐 密码验证
 - 📝 填写个人信息和工作内容
 - 🤖 AI 一键生成自我批评材料
 - 📄 支持导出 Word 文档
@@ -23,9 +36,20 @@
 - 📄 支持导出 Word 文档
 - 📋 一键复制结果
 
-## 🚀 本地部署
+## 🚀 部署方式
 
-### 方式一：Docker Compose（推荐）
+### 静态版本（master 分支）
+
+直接部署到任意 Web 服务器（Nginx/Apache 等）：
+
+```bash
+# 将 index.html 和 critique.html 放到 Web 服务器根目录
+# 访问 http://your-server/ziping.html
+```
+
+### 后端版本（backend-with-ip-lock 分支）
+
+#### 方式一：Docker Compose（推荐）
 
 ```bash
 # 构建并启动
@@ -38,13 +62,13 @@ docker-compose logs -f
 docker-compose down
 ```
 
-### 方式二：直接运行
+#### 方式二：直接运行
 
 ```bash
 # 安装依赖
 npm install
 
-# 启动服务（默认密码：58156104）
+# 启动服务
 npm start
 
 # 或自定义密码
@@ -53,22 +77,9 @@ PARTY_PASSWORD=your_password npm start
 
 访问：http://localhost:3888
 
-## 📁 项目结构
-
-```
-party-self-criticism/
-├── server.js           # Node.js 后端服务
-├── package.json        # 项目配置
-├── Dockerfile          # Docker 镜像
-├── docker-compose.yml  # Docker Compose 配置
-└── public/             # 前端页面
-    ├── index.html      # 自我批评页面
-    └── critique.html   # 批评他人页面
-```
-
 ## 🔧 配置说明
 
-### 环境变量
+### 环境变量（后端版本）
 
 | 变量名 | 说明 | 默认值 |
 |--------|------|--------|
@@ -81,7 +92,7 @@ party-self-criticism/
 - **DeepSeek**：deepseek-chat
 - **自定义**：任意兼容 OpenAI 格式的 API
 
-## 🔒 安全特性
+## 🔒 安全特性（后端版本）
 
 1. **密码后端验证** - 前端不存储明文密码
 2. **IP 锁定保护** - 5 次错误后锁定 30 分钟
@@ -89,7 +100,7 @@ party-self-criticism/
 
 ## 📝 版本历史
 
-- **V1.8** - 密码验证移至后端，IP 锁定保护
+- **V1.8** - 新增后端版本（IP 锁定保护）、批评他人页面
 - **V1.7** - 支持自定义 API Key，新增 DeepSeek 选项
 - **V1.5** - 删除特定行业字段，适用于所有岗位
 - **V1.4** - 严格基于实际工作生成，禁止编造
