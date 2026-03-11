@@ -227,7 +227,7 @@
         // 检查 IP 锁定状态
         async function checkLockStatus() {
             try {
-                const response = await fetch('/party/api/status');
+                const response = await fetch('/api/status');
                 const data = await response.json();
                 if (data.locked) {
                     showLockedMessage(data.message);
@@ -258,7 +258,7 @@
             }
 
             try {
-                const response = await fetch('/party/api/verify', {
+                const response = await fetch('/api/verify', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
